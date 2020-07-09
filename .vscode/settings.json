@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "atomic": "c",
+        "fstream": "c",
+        "sstream": "c"
+    }
+}
