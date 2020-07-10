@@ -36,6 +36,9 @@ LDFLAGS=$(LIBS)
 $(PROGRAM): encoder.o keyboard_control.o
 	gcc -o $@ $(LDFLAGS) $^
 
+install: $(PROGRAM)
+	install $(PROGRAM) /usr/bin/$(PROGRAM)
+
 clean:
 	rm -f *.o
 	rm -f $(PROGRAM)
