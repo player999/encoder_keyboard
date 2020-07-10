@@ -29,6 +29,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
+#include <errno.h>
 #include <linux/hidraw.h>
 #include <memory.h>
 #include <stdio.h>
@@ -51,31 +52,33 @@ int get_keyboard()
         static char fname[DESCRIPTOR_SIZE];
         int descriptor_size;
         struct hidraw_devinfo devinfo;
+        struct stat stat_buf;
+        int err;
 
         snprintf(fname, sizeof(fname), "/dev/hidraw%d", dev_idx);
-        fd = open(fname, O_RDWR);
-        if(-1 == fd)
+        err = stat(fname, &stat_buf);
+        if(ENOENT == stat(fname, &stat_buf))
         {
-            return fd;
+            return -1;
         }
 
-        if(-1 != ioctl(fd, HIDIOCGRAWINFO, &devinfo))
+        fd = open(fname, O_RDWR);
+        if(-1 != fd)
         {
-            if((OMEN_ENCODER_VID == devinfo.vendor) && (OMEN_ENCODER_PID == devinfo.product))
+            if(-1 != ioctl(fd, HIDIOCGRAWINFO, &devinfo))
             {
-                if(-1 != ioctl(fd, HIDIOCGRDESCSIZE, &descriptor_size))
+                if((OMEN_ENCODER_VID == devinfo.vendor) && (OMEN_ENCODER_PID == devinfo.product))
                 {
-                    if(DESCRIPTOR_SIZE == descriptor_size)
+                    if(-1 != ioctl(fd, HIDIOCGRDESCSIZE, &descriptor_size))
                     {
-                        break;
-                    }
+                        if(DESCRIPTOR_SIZE == descriptor_size)
+                        {
+                            break;
+                        }
 
+                    }
                 }
             }
-        }
-        else
-        {
-            perror("ioctl failed");
         }
         close(fd);
         dev_idx++;
